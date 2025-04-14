@@ -22,7 +22,7 @@ class CreateFavoritesTable extends Migration
             $table->timestamps();
             $table->foreign('craftsman_id')->references('id')->on('craftsmen')->onDelete('cascade');
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
-            $table->foreign('list_id')->references('id')->on('favoriteLists')->onDelete('cascade');
+            $table->foreign('list_id')->references('id')->on('favorite_lists')->onDelete('cascade');
         });
     }
 

@@ -13,7 +13,7 @@ class CreateFavoriteListsTable extends Migration
      */
     public function up()
     {
-        Schema::create('favoriteLists', function (Blueprint $table) {
+        Schema::create('favorite_lists', function (Blueprint $table) {
             $table->id();
             $table->string('title');
             $table->string('description');
@@ -30,6 +30,6 @@ class CreateFavoriteListsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('favoriteLists');
+        Schema::dropIfExists('favorite_lists');
     }
 }
