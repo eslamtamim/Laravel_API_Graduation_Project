@@ -125,6 +125,10 @@ Route::post('/update_crafts', [CraftsController::class, 'update']);
 
 Route::post('/home', [HomeController::class, 'get_homepage_data']);
 
+Route::get('/hi', function () {
+    return response()->json(['message' => 'hi']);
+});
+
 Route::get('/img/{path}/{name}', function(String $path, String $name){
     // Assuming $name contains the name of the uploaded file
     $filePath = storage_path('app/public/images/'. $path. '/' . $name);
