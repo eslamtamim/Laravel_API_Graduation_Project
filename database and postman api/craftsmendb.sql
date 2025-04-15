@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 11, 2024 at 04:09 PM
+-- Generation Time: Apr 14, 2025 at 09:53 PM
 -- Server version: 10.4.24-MariaDB
--- PHP Version: 8.1.6
+-- PHP Version: 8.3.10
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -511,7 +511,8 @@ INSERT INTO `craftsman_notifications` (`id`, `title`, `msg`, `craftsman_id`, `cr
 (42, 'تم الموافقة عليك', 'تم قبولك في العرض الذي قدمت عليه(تركيب نظام تنقية المياه)', 2, '2024-06-28 19:55:00', '2024-06-28 19:55:00'),
 (43, 'تم الموافقة عليك', 'تم قبولك في العرض الذي قدمت عليه(تركيب مضخة مياه)', 2, '2024-06-28 20:26:45', '2024-06-28 20:26:45'),
 (44, 'تم الموافقة عليك', 'تم قبولك في العرض الذي قدمت عليه(تركيب سخان مياه جديد)', 2, '2024-06-28 20:46:35', '2024-06-28 20:46:35'),
-(45, 'لقد وافق العميل على إنهاء العمل', 'لقد وافق العميل على إنهاء العمل وقام بتقييمك وستجد هذا العمل في قائمة الأعمال المنتهية', 2, '2024-06-28 20:47:20', '2024-06-28 20:47:20');
+(45, 'لقد وافق العميل على إنهاء العمل', 'لقد وافق العميل على إنهاء العمل وقام بتقييمك وستجد هذا العمل في قائمة الأعمال المنتهية', 2, '2024-06-28 20:47:20', '2024-06-28 20:47:20'),
+(46, 'تم الموافقة على طلب معاينتك', 'تم قبولك في العرض الذي قدمت طلب المعاينة عليه(حخحهخهحخههخهه)', 2, '2025-04-08 10:33:38', '2025-04-08 10:33:38');
 
 -- --------------------------------------------------------
 
@@ -559,7 +560,8 @@ INSERT INTO `craftsmen` (`id`, `name`, `email`, `password`, `address`, `status`,
 (16, 'رامي', 'rami@gmail.com', '$2y$10$6uQffmK0qjv/kKLV8QvwYuC4cIc55sWWL9ZfsxSJMI2nkKZJgr/Wm', 'الدقهلية, المنصورة, شارع الترعة', 'busy', NULL, 'متخصص في عمل الديكورات والتشطيبات الزخرفية، سواء على الجدران الداخلية أو الخارجية، بالإضافة إلى الأسقف', 'craftsman/Cab60JkALe4WwT0X.jfif', 14, NULL, NULL, '2024-06-27 22:51:57', '2024-06-28 18:26:28'),
 (17, 'محمود', 'mahmoud@gmail.com', '$2y$10$cv8oyJxZRttCFRxfg50AF..q8spsqFg/GWkofZo9A/oM5LzlceCNS', 'الدقهلية, طلخا, الموقف ', 'busy', NULL, 'أقوم بتشكيل الخشب وبناء الأثاث والهياكل الخشبية', 'craftsman/COcOeFoyumv1IMcZ.jfif', 14, NULL, NULL, '2024-06-27 22:52:14', '2024-06-28 17:55:30'),
 (18, 'ناصر', 'nasir@gmail.com', '$2y$10$TfIiBm6EeDLzhyTQz3DryeFgikITUoFHHhvjzNbYLbyw0kIbVHb.i', 'الدقهلية, المنصورة, شارع الترعة', 'busy', NULL, 'أقوم بتشكيل الخشب وبناء الأثاث والهياكل الخشبية', 'craftsman/LpkTkR4wrquoBKEE.jfif', 14, NULL, NULL, '2024-06-27 22:52:31', '2024-06-28 18:23:30'),
-(19, 'omar mazen', 'omar.mazen250@gmail.com', NULL, 'الدقهلية, طلخا, الموقف ', 'free', NULL, NULL, NULL, NULL, '110085592337263116951', 'google', '2024-06-28 10:43:25', '2024-06-28 10:43:25');
+(19, 'omar mazen', 'omar.mazen250@gmail.com', NULL, 'الدقهلية, طلخا, الموقف ', 'free', NULL, NULL, NULL, NULL, '110085592337263116951', 'google', '2024-06-28 10:43:25', '2024-06-28 10:43:25'),
+(20, 'ناصر', 'omar6@gmail.com', '$2y$10$2wdlR34gkN7vi5j5WYGS1u7V3ZHMuHlM8UVyTyzs6zixf69PZxJPO', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-08-04 04:21:31', '2024-08-04 04:21:31');
 
 -- --------------------------------------------------------
 
@@ -678,6 +680,26 @@ INSERT INTO `jobs_offer_images` (`id`, `image`, `job_offer_id`, `created_at`, `u
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `jobs_offer_inspections`
+--
+
+CREATE TABLE `jobs_offer_inspections` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `offered_price` decimal(8,2) NOT NULL,
+  `inspection_price` decimal(8,2) NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `type_of_pricing` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `start_date` datetime NOT NULL,
+  `end_date` datetime NOT NULL,
+  `job_offer_id` bigint(20) UNSIGNED NOT NULL,
+  `craftsman_id` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `jobs_offer_replies`
 --
 
@@ -699,7 +721,51 @@ CREATE TABLE `jobs_offer_replies` (
 INSERT INTO `jobs_offer_replies` (`id`, `offered_price`, `description`, `type_of_pricing`, `job_offer_id`, `craftsman_id`, `created_at`, `updated_at`) VALUES
 (72, 500.00, 'يسعدني أن أؤكد لكم أنني قادر على تنفيذ المهمة المطلوبة بكفاءة عالية وإتقان تام. سألتزم بجميع المواعيد المحددة، وأضمن استخدام أفضل الخامات لتحقيق أفضل النتائج. لدي خبرة واسعة في التعامل مع الأثاث الكلاسيكي، وأمتلك المهارات الدقيقة في النجارة والدهان اللازمة لتجديد الأثاث المصنوع من خشب الزان.', 'متر طولي', 87, 17, '2024-06-28 22:12:39', '2024-06-28 22:12:39'),
 (73, 500.00, 'أشكركم على اهتمامكم بخدماتي. يسعدني أن أؤكد لكم أنني قادر على تنفيذ المهمة المطلوبة بكفاءة عالية وإتقان تام. سألتزم بجميع المواعيد المحددة، وأضمن استخدام أفضل الخامات لتحقيق أفضل النتائج. لدي خبرة واسعة في تركيب الأبواب الخشبية وأمتلك المهارات الدقيقة لتحقيق نتائج مرضية.', 'متر طولي', 86, 17, '2024-06-28 22:14:26', '2024-06-28 22:14:26'),
-(74, 200.00, 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk', 'متر مربع', 84, 17, '2024-06-29 05:03:55', '2024-06-29 05:03:55');
+(74, 200.00, 'عملتلك خصم وبسعر مثالي', 'متر مربع', 84, 17, '2024-06-29 05:03:55', '2025-04-07 10:58:19');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `job_cancellation_client`
+--
+
+CREATE TABLE `job_cancellation_client` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `status` enum('pending','approved') NOT NULL,
+  `client_id` bigint(20) UNSIGNED NOT NULL,
+  `active_job_id` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `job_cancellation_client`
+--
+
+INSERT INTO `job_cancellation_client` (`id`, `status`, `client_id`, `active_job_id`, `created_at`, `updated_at`) VALUES
+(1, 'pending', 20, 27, '2025-04-08 13:23:47', '2025-04-08 13:23:47');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `job_cancellation_craftsman`
+--
+
+CREATE TABLE `job_cancellation_craftsman` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `status` enum('pending','approved') NOT NULL,
+  `craftsman_id` bigint(20) UNSIGNED NOT NULL,
+  `active_job_id` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `job_cancellation_craftsman`
+--
+
+INSERT INTO `job_cancellation_craftsman` (`id`, `status`, `craftsman_id`, `active_job_id`, `created_at`, `updated_at`) VALUES
+(1, 'pending', 2, 29, '2025-04-08 13:16:14', '2025-04-08 13:16:14');
 
 -- --------------------------------------------------------
 
@@ -931,12 +997,36 @@ ALTER TABLE `jobs_offer_images`
   ADD KEY `jobs_offer_images_job_offer_id_foreign` (`job_offer_id`);
 
 --
+-- Indexes for table `jobs_offer_inspections`
+--
+ALTER TABLE `jobs_offer_inspections`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `jobs_offer_inspections_job_offer_id_foreign` (`job_offer_id`),
+  ADD KEY `jobs_offer_inspections_craftsman_id_foreign` (`craftsman_id`);
+
+--
 -- Indexes for table `jobs_offer_replies`
 --
 ALTER TABLE `jobs_offer_replies`
   ADD PRIMARY KEY (`id`),
   ADD KEY `jobs_offer_replies_job_offer_id_foreign` (`job_offer_id`),
   ADD KEY `jobs_offer_replies_craftsman_id_foreign` (`craftsman_id`);
+
+--
+-- Indexes for table `job_cancellation_client`
+--
+ALTER TABLE `job_cancellation_client`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `client_id_cancelation` (`client_id`),
+  ADD KEY `active_job_id_client_cancelation` (`active_job_id`);
+
+--
+-- Indexes for table `job_cancellation_craftsman`
+--
+ALTER TABLE `job_cancellation_craftsman`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `craftsman_id_cancelation` (`craftsman_id`),
+  ADD KEY `active_job_id_craftsman_cancelation` (`active_job_id`);
 
 --
 -- Indexes for table `password_resets`
@@ -1015,7 +1105,7 @@ ALTER TABLE `craftsman_done_jobs_ratings`
 -- AUTO_INCREMENT for table `craftsman_jobs`
 --
 ALTER TABLE `craftsman_jobs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `craftsman_jobs_finished`
@@ -1033,13 +1123,13 @@ ALTER TABLE `craftsman_jobs_images`
 -- AUTO_INCREMENT for table `craftsman_notifications`
 --
 ALTER TABLE `craftsman_notifications`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT for table `craftsmen`
 --
 ALTER TABLE `craftsmen`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `favoritelists`
@@ -1057,7 +1147,7 @@ ALTER TABLE `favorites`
 -- AUTO_INCREMENT for table `jobs_offers`
 --
 ALTER TABLE `jobs_offers`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=99;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
 
 --
 -- AUTO_INCREMENT for table `jobs_offer_images`
@@ -1066,10 +1156,28 @@ ALTER TABLE `jobs_offer_images`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=93;
 
 --
+-- AUTO_INCREMENT for table `jobs_offer_inspections`
+--
+ALTER TABLE `jobs_offer_inspections`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
+
+--
 -- AUTO_INCREMENT for table `jobs_offer_replies`
 --
 ALTER TABLE `jobs_offer_replies`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
+
+--
+-- AUTO_INCREMENT for table `job_cancellation_client`
+--
+ALTER TABLE `job_cancellation_client`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `job_cancellation_craftsman`
+--
+ALTER TABLE `job_cancellation_craftsman`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `password_resets`
@@ -1194,11 +1302,32 @@ ALTER TABLE `jobs_offer_images`
   ADD CONSTRAINT `jobs_offer_images_job_offer_id_foreign` FOREIGN KEY (`job_offer_id`) REFERENCES `jobs_offers` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `jobs_offer_inspections`
+--
+ALTER TABLE `jobs_offer_inspections`
+  ADD CONSTRAINT `jobs_offer_inspections_craftsman_id_foreign` FOREIGN KEY (`craftsman_id`) REFERENCES `craftsmen` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `jobs_offer_inspections_job_offer_id_foreign` FOREIGN KEY (`job_offer_id`) REFERENCES `jobs_offers` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `jobs_offer_replies`
 --
 ALTER TABLE `jobs_offer_replies`
   ADD CONSTRAINT `jobs_offer_replies_craftsman_id_foreign` FOREIGN KEY (`craftsman_id`) REFERENCES `craftsmen` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `jobs_offer_replies_job_offer_id_foreign` FOREIGN KEY (`job_offer_id`) REFERENCES `jobs_offers` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `job_cancellation_client`
+--
+ALTER TABLE `job_cancellation_client`
+  ADD CONSTRAINT `active_job_id_client_cancelation` FOREIGN KEY (`active_job_id`) REFERENCES `craftsman_jobs` (`id`) ON DELETE NO ACTION,
+  ADD CONSTRAINT `client_id_cancelation` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `job_cancellation_craftsman`
+--
+ALTER TABLE `job_cancellation_craftsman`
+  ADD CONSTRAINT `active_job_id_craftsman_cancelation` FOREIGN KEY (`active_job_id`) REFERENCES `craftsman_jobs` (`id`) ON DELETE NO ACTION,
+  ADD CONSTRAINT `craftsman_id_cancelation` FOREIGN KEY (`craftsman_id`) REFERENCES `craftsmen` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `phones`
