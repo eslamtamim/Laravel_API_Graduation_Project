@@ -21,7 +21,7 @@ use App\Models\JobsOfferImage;
 use App\Models\JobsOfferInspection;
 use App\Models\JobsOfferReply;
 use App\Models\Phone;
-use App\Services\NotificationSender;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
