@@ -8,7 +8,7 @@ use App\Models\ClientNotification;
 use App\Models\CraftsmanNotification;
 use Illuminate\Support\ServiceProvider;
 use App\Services\FCMService;
-use App\Services\NotificationService;
+use App\Services\NotificationSender;
 
 class AppServiceProvider extends ServiceProvider
 {
