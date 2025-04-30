@@ -6,7 +6,7 @@ use App\Models\Chat;
 use Illuminate\Http\Request;
 use Kreait\Firebase\Factory;
 use App\Models\ChatMessage;
-use App\Services\NotificationSender;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
