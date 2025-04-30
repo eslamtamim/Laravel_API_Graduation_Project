@@ -35,7 +35,7 @@ class ChatController extends Controller
         if (!$chat) {
             return response()->json(['message' => 'chat not created','status' => false],500);
         }
-        return response()->json(['message' => 'chat created successfully','status' => true],200);
+        return response()->json(['message' => 'chat created successfully','status' => true, 'chat_id' => $chat->id, ],200);
     }
 
     public function sendMessage(Request $request)
