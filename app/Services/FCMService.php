@@ -11,7 +11,7 @@ class FCMService
     public function __construct()
     {
         $this->firebase = (new Factory)
-            ->withServiceAccount(storage_path('app/craftsman-7f136-firebase-adminsdk-fbsvc-d43dde50c5.json'))
+            ->withServiceAccount(storage_path('app/handsmen-7c4bd-firebase-adminsdk-fbsvc-03ddc3fb62.json'))
             ->createMessaging();
     }
 
