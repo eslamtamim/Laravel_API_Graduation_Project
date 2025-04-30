@@ -60,7 +60,7 @@ class ChatController extends Controller
 
             $message = ChatMessage::create([
                 'chat_id' => $request->chat_id,
-                'sender' => $request->sender,
+                'se4nder' => $request->sender,
                 'msg' => $imageName,
                 'type' => 'image',
             ]);
@@ -76,7 +76,7 @@ class ChatController extends Controller
                 $user_id = Chat::where('id', $request->chat_id)->client_id;
                 $user_type = 'client';
             } else {
-                $user_id = Chat::where('id', $request->chat_id)->craftsman_id;
+                $user_id = Chat::where('id', $request->chat_id)->first()->craftsman_id;
                 $user_type = 'craftsman';
             }
             $title = 'New message';
@@ -121,7 +121,7 @@ class ChatController extends Controller
                 $user_id = Chat::where('id', $request->chat_id)->client_id;
                 $user_type = 'client';
             } else {
-                $user_id = Chat::where('id', $request->chat_id)->craftsman_id;
+                $user_id = Chat::where('id', $request->chat_id)->first()->craftsman_id;
                 $user_type = 'craftsman';
             }
             $title = 'New message';
