@@ -138,4 +138,86 @@ class ChatController extends Controller
             }
         }
     }
+
+    public function getChatById(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'chat_id' => 'required|exists:chats,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors(), 'status' => false], 400);
+        }
+
+        $chat = Chat::with(['messages' => function($query) {
+            $query->orderBy('created_at', 'asc');
+        }])->find($request->chat_id);
+
+        if (!$chat) {
+            return response()->json(['message' => 'Chat not found', 'status' => false], 404);
+        }
+
+        return response()->json([
+            'message' => 'Chat retrieved successfully',
+            'status' => true,
+            'data' => $chat
+        ], 200);
+    }
+
+    public function getChatByUser(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'client_id' => 'required|exists:clients,id',
+            'craftsman_id' => 'required|exists:craftsmen,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors(), 'status' => false], 400);
+        }
+
+        $chat = Chat::where('client_id', $request->client_id)
+            ->where('craftsman_id', $request->craftsman_id)
+            ->with(['messages' => function($query) {
+                $query->orderBy('created_at', 'asc');
+            }])
+            ->first();
+
+        if (!$chat) {
+            return response()->json(['message' => 'Chat not found', 'status' => false], 404);
+        }
+
+        return response()->json([
+            'message' => 'Chat retrieved successfully',
+            'status' => true,
+            'data' => $chat
+        ], 200);
+    }
+
+    public function getClientChats(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'client_id' => 'required|exists:clients,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors(), 'status' => false], 400);
+        }
+
+        $chats = Chat::where('client_id', $request->client_id)
+            ->with(['messages' => function($query) {
+                $query->orderBy('created_at', 'desc');
+            }])
+            ->with('craftsman')
+            ->get();
+
+        if ($chats->isEmpty()) {
+            return response()->json(['message' => 'No chats found', 'status' => false], 404);
+        }
+
+        return response()->json([
+            'message' => 'Chats retrieved successfully',
+            'status' => true,
+            'data' => $chats
+        ], 200);
+    }
 }

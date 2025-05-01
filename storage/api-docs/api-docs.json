@@ -1,0 +1,67 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Handyman API Documentation",
+        "description": "API documentation for the Handyman platform",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://my-default-host.com",
+            "description": "API Server"
+        }
+    ],
+    "paths": {
+        "/api/homepage-data": {
+            "get": {
+                "tags": [
+                    "Home"
+                ],
+                "summary": "Get homepage statistics and data",
+                "operationId": "661248bc19105116bf7c7d690f33c03b",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "craftsmen_count": {
+                                            "type": "integer",
+                                            "example": 150
+                                        },
+                                        "clients_count": {
+                                            "type": "integer",
+                                            "example": 500
+                                        },
+                                        "done_jobs_count": {
+                                            "type": "integer",
+                                            "example": 1000
+                                        },
+                                        "total_profit": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 50000
+                                        },
+                                        "average_profit": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 5000
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Home",
+            "description": "Home"
+        }
+    ]
+}

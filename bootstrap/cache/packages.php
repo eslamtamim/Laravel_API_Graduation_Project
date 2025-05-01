@@ -10,15 +10,26 @@
       0 => 'Bepsvpt\\Blurhash\\BlurHashServiceProvider',
     ),
   ),
-  'facade/ignition' => 
+  'darkaonline/l5-swagger' => 
   array (
+    'aliases' => 
+    array (
+      'L5Swagger' => 'L5Swagger\\L5SwaggerFacade',
+    ),
     'providers' => 
     array (
-      0 => 'Facade\\Ignition\\IgnitionServiceProvider',
+      0 => 'L5Swagger\\L5SwaggerServiceProvider',
     ),
+  ),
+  'facade/ignition' => 
+  array (
     'aliases' => 
     array (
       'Flare' => 'Facade\\Ignition\\Facades\\Flare',
+    ),
+    'providers' => 
+    array (
+      0 => 'Facade\\Ignition\\IgnitionServiceProvider',
     ),
   ),
   'fruitcake/laravel-cors' => 

@@ -90,6 +90,9 @@ Route::group([
     Route::post('/craftsman_response_job_cancellation', [CraftsmanJobsController::class, 'craftsman_response_job_cancellation']);
     Route::post('/create_chat', [ChatController::class, 'create_chat']);
     Route::post('/send_message', [ChatController::class, 'sendMessage']);
+    Route::get('/get_chat_by_id', [ChatController::class, 'getChatById']);
+    Route::get('/get_chat_by_user', [ChatController::class, 'getChatByUser']);
+    Route::get('/get_client_chats', [ChatController::class, 'getClientChats']);
 });
 
 

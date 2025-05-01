@@ -12,6 +12,33 @@ use App\Models\SearchImages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @OA\Info(
+ *     version="1.0.0",
+ *     title="Handyman API Documentation",
+ *     description="API documentation for the Handyman platform"
+ * )
+ */
+
+/**
+ * @OA\Get(
+ *     path="/api/homepage-data",
+ *     summary="Get homepage statistics and data",
+ *     tags={"Home"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful operation",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="craftsmen_count", type="integer", example=150),
+ *             @OA\Property(property="clients_count", type="integer", example=500),
+ *             @OA\Property(property="done_jobs_count", type="integer", example=1000),
+ *             @OA\Property(property="total_profit", type="number", format="float", example=50000.00),
+ *             @OA\Property(property="average_profit", type="number", format="float", example=5000.00)
+ *         )
+ *     )
+ * )
+ */
+
 class HomeController extends Controller
 {
     /**
