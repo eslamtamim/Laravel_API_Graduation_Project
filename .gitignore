@@ -15,3 +15,5 @@ yarn-error.log
 /.vscode
 
 .vercel
+
+/storage/app/public/handsmen-7c4bd-firebase-adminsdk-fbsvc-03ddc3fb62.json
