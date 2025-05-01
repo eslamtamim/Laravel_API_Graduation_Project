@@ -25,7 +25,7 @@ class ChatController extends Controller
             ->where('client_id', $request->client_id)
             ->first();
         if ($existingChat) {
-            return response()->json(['message' => 'chat already exist','status' => true],200);
+            return response()->json(['message' => 'chat already exist','status' => true, 'chat_id' => $existingChat->id],200);
         }
         // Create a new chat
         $chat = Chat::create([
