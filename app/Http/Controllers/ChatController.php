@@ -160,7 +160,7 @@ class ChatController extends Controller
         return response()->json([
             'message' => 'Chat retrieved successfully',
             'status' => true,
-            'data' => $chat
+            'chat' => $chat
         ], 200);
     }
 
@@ -183,13 +183,28 @@ class ChatController extends Controller
             ->first();
 
         if (!$chat) {
-            return response()->json(['message' => 'Chat not found', 'status' => false], 404);
+            // Create new chat if it doesn't exist
+            $chat = Chat::create([
+                'client_id' => $request->client_id,
+                'craftsman_id' => $request->craftsman_id
+            ]);
+
+            // Reload the chat with messages relationship
+            $chat = Chat::with(['messages' => function($query) {
+                $query->orderBy('created_at', 'asc');
+            }])->find($chat->id);
+
+            return response()->json([
+                'message' => 'New chat created successfully',
+                'status' => true,
+                'chat' => $chat
+            ], 201);
         }
 
         return response()->json([
-            'message' => 'Chat retrieved successfully',
+            'message' => 'Chat retrieved successfully', 
             'status' => true,
-            'data' => $chat
+            'chat' => $chat
         ], 200);
     }
 
@@ -217,7 +232,35 @@ class ChatController extends Controller
         return response()->json([
             'message' => 'Chats retrieved successfully',
             'status' => true,
-            'data' => $chats
+            'chats' => $chats
+        ], 200);
+    }
+
+    public function getCraftsmanChats(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'craftsman_id' => 'required|exists:craftsmen,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors(), 'status' => false], 400);
+        }
+
+        $chats = Chat::where('craftsman_id', $request->craftsman_id)
+            ->with(['messages' => function($query) {
+                $query->orderBy('created_at', 'desc');
+            }])
+            ->with('client')
+            ->get();
+
+        if ($chats->isEmpty()) {
+            return response()->json(['message' => 'No chats found', 'status' => false], 404);
+        }
+
+        return response()->json([
+            'message' => 'Chats retrieved successfully',
+            'status' => true,
+            'chats' => $chats
         ], 200);
     }
 }

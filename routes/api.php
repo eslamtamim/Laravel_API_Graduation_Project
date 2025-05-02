@@ -93,6 +93,7 @@ Route::group([
     Route::get('/get_chat_by_id', [ChatController::class, 'getChatById']);
     Route::get('/get_chat_by_user', [ChatController::class, 'getChatByUser']);
     Route::get('/get_client_chats', [ChatController::class, 'getClientChats']);
+    Route::get('/get_craftsman_chats', [ChatController::class, 'getCraftsmanChats']);
 });
 
 

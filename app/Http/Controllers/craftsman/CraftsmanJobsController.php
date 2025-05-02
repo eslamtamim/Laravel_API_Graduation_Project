@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class CraftsmanJobsController extends Controller
 {
@@ -378,15 +379,31 @@ class CraftsmanJobsController extends Controller
             if ($job_offer_images) {
                 foreach ($job_offer_images as $img) {
                     $active_job_image = new CraftsmanJobImage();
-                    $url = storage_path('' . 'app/public/images/' . $img->image . '');
-                    $NameAfterDelete = str_replace("jobs_offers/", "",$img->image);
+                    $url = storage_path('app/public/images/' . $img->image);
+                    $NameAfterDelete = str_replace("jobs_offers/", "", $img->image);
                     $extension = pathinfo($NameAfterDelete, PATHINFO_EXTENSION);
                     $imageName = 'active_jobs/'.Str::random().'.'.$extension;
-                    $newUrl = storage_path('' . 'app/public/images/' . $imageName . '');
-                    File::move($url, $newUrl);
-                    $active_job_image->image = $imageName;
-                    $active_job_image->job_id = $ActiveJob->id;
-                    $active_job_image->save();
+                    $newUrl = storage_path('app/public/images/' . $imageName);
+                    
+                    if (!File::exists($url)) {
+                        \Log::error("Source file does not exist: " . $url);
+                        continue;
+                    }
+                    
+                    if (!File::exists(dirname($newUrl))) {
+                        \Log::error("Target directory does not exist: " . dirname($newUrl));
+                        continue;
+                    }
+                    
+                    try {
+                        File::move($url, $newUrl);
+                        $active_job_image->image = $imageName;
+                        $active_job_image->job_id = $ActiveJob->id;
+                        $active_job_image->save();
+                    } catch (\Exception $e) {
+                        \Log::error("Failed to move file: " . $e->getMessage());
+                        continue;
+                    }
                 }
                 foreach ($job_offer_images as $job_offer_image) {
                     if ($job_offer_image->image) {
@@ -480,15 +497,31 @@ class CraftsmanJobsController extends Controller
             if ($job_offer_images) {
                 foreach ($job_offer_images as $img) {
                     $active_job_image = new CraftsmanJobImage();
-                    $url = storage_path('' . 'app/public/images/' . $img->image . '');
-                    $NameAfterDelete = str_replace("jobs_offers/", "",$img->image);
+                    $url = storage_path('app/public/images/' . $img->image);
+                    $NameAfterDelete = str_replace("jobs_offers/", "", $img->image);
                     $extension = pathinfo($NameAfterDelete, PATHINFO_EXTENSION);
                     $imageName = 'active_jobs/'.Str::random().'.'.$extension;
-                    $newUrl = storage_path('' . 'app/public/images/' . $imageName . '');
-                    File::move($url, $newUrl);
-                    $active_job_image->image = $imageName;
-                    $active_job_image->job_id = $ActiveJob->id;
-                    $active_job_image->save();
+                    $newUrl = storage_path('app/public/images/' . $imageName);
+                    
+                    if (!File::exists($url)) {
+                        \Log::error("Source file does not exist: " . $url);
+                        continue;
+                    }
+                    
+                    if (!File::exists(dirname($newUrl))) {
+                        \Log::error("Target directory does not exist: " . dirname($newUrl));
+                        continue;
+                    }
+                    
+                    try {
+                        File::move($url, $newUrl);
+                        $active_job_image->image = $imageName;
+                        $active_job_image->job_id = $ActiveJob->id;
+                        $active_job_image->save();
+                    } catch (\Exception $e) {
+                        \Log::error("Failed to move file: " . $e->getMessage());
+                        continue;
+                    }
                 }
                 foreach ($job_offer_images as $job_offer_image) {
                     if ($job_offer_image->image) {
@@ -671,8 +704,13 @@ class CraftsmanJobsController extends Controller
             $doneJob->status = 'finished';
             $doneJob->craftsman_id = $active_job->craftsman_id;
             $doneJob->client_id = $active_job->client_id;
-            CraftsmanJobFinished::where('active_job_id' , $active_job->id)->delete();
-            $active_jobs_images = CraftsmanJobImage::where('job_id' , $active_job->id)->get();
+            
+            // Delete related records first
+            ClientJobCancel::where('active_job_id', $active_job->id)->delete();
+            CraftsmanJobCancel::where('active_job_id', $active_job->id)->delete();
+            CraftsmanJobFinished::where('active_job_id', $active_job->id)->delete();
+            
+            $active_jobs_images = CraftsmanJobImage::where('job_id', $active_job->id)->get();
             if ($active_jobs_images) {
                 foreach ($active_jobs_images as $active_job_image) {
                     if ($active_job_image->image) {
@@ -682,7 +720,7 @@ class CraftsmanJobsController extends Controller
                         }
                     }
                 }
-                CraftsmanJobImage::where('job_id' , $active_job->id)->delete();
+                CraftsmanJobImage::where('job_id', $active_job->id)->delete();
             }
             $active_job->delete();
             if ($active_job) {
@@ -752,45 +790,118 @@ class CraftsmanJobsController extends Controller
 
     public function client_cancel_job(Request $request)
     {
-        $client_id = $request->client_id;
-        if (!$client_id) {
-            return response()->json(['message' => 'you should give me the id of the client in parameter(client_id)','status' => false],404);
-        }
-        $active_job_id = $request->active_job_id;
-        if (!$active_job_id) {
-            return response()->json(['message' => 'you should give me the id of the active job in parameter(active_job_id)','status' => false],404);
-        }
+        try {
+            $client_id = $request->client_id;
+            if (!$client_id) {
+                return response()->json(['message' => 'you should give me the id of the client in parameter(client_id)','status' => false],404);
+            }
+            $active_job_id = $request->active_job_id;
+            if (!$active_job_id) {
+                return response()->json(['message' => 'you should give me the id of the active job in parameter(active_job_id)','status' => false],404);
+            }
 
-        $client = Client::find($client_id);
-        if (!$client) {
-            return response()->json(['message'=>'client not found','status'=>false,],404);
-        }
+            $client = Client::find($client_id);
+            if (!$client) {
+                return response()->json(['message'=>'client not found','status'=>false,],404);
+            }
 
-        $active_job = CraftsmanJob::select()->where('id',$active_job_id)->where('client_id',$client_id)->first();
-        if (!$active_job) {
-            return response()->json(['message'=>'active job not found or this client does not have this active job','status'=>false,],404);
-        }
-        $notificationVar = $active_job->craftsman_id;
-        $CancelActiveJob = CraftsmanJobCancel::select()->where('active_job_id',$active_job_id)->first();
-        if ($CancelActiveJob) {
-            return response()->json(['message'=>'craftsman already requested cancellation for this active_job','status'=>false,],400);
-        }
-        $CancelActiveJob = ClientJobCancel::select()->where('active_job_id',$active_job_id)->where('client_id',$client_id)->first();
-        if ($CancelActiveJob) {
-            return response()->json(['message'=>'this client already requested cancellation for this active_job','status'=>false,],400);
-        }
-        $status = 'pending';
-        $CancelActiveJob = new ClientJobCancel();
-        $CancelActiveJob->status = $status;
-        $CancelActiveJob->client_id = $client_id;
-        $CancelActiveJob->active_job_id = $active_job_id;
-        $CancelActiveJob->save();
-        if ($CancelActiveJob) {
-            return response()->json(['message' => 'request is sent successfully', 'status' => true],200);
-        }
-        else
-        {
-            return response()->json(['message' => 'can not send this request', 'status' => false],400);
+            $active_job = CraftsmanJob::select()->where('id',$active_job_id)->where('client_id',$client_id)->first();
+            if (!$active_job) {
+                return response()->json(['message'=>'active job not found or this client does not have this active job','status'=>false,],404);
+            }
+
+            // Check if job is already finished
+            $finishedJob = CraftsmanJobFinished::where('active_job_id', $active_job_id)->first();
+            if ($finishedJob) {
+                return response()->json(['message'=>'cannot cancel a finished job','status'=>false,],400);
+            }
+
+            // Check for existing cancellation requests
+            $existingCraftsmanCancel = CraftsmanJobCancel::where('active_job_id',$active_job_id)->first();
+            $existingClientCancel = ClientJobCancel::where('active_job_id',$active_job_id)
+                ->where('client_id',$client_id)
+                ->first();
+
+            if ($existingClientCancel) {
+                return response()->json(['message'=>'this client already requested cancellation for this active_job','status'=>false,],400);
+            }
+
+            \DB::beginTransaction();
+
+            $cancellationRequest = new ClientJobCancel();
+            $cancellationRequest->status = 'pending';
+            $cancellationRequest->client_id = $client_id;
+            $cancellationRequest->active_job_id = $active_job_id;
+            $cancellationRequest->save();
+
+            // If craftsman has already requested cancellation, automatically cancel the job
+            if ($existingCraftsmanCancel) {
+                // Update both cancellation requests to approved
+                $existingCraftsmanCancel->status = 'approved';
+                $existingCraftsmanCancel->save();
+                $cancellationRequest->status = 'approved';
+                $cancellationRequest->save();
+
+                // Delete any related records first
+                ClientJobCancel::where('active_job_id', $active_job_id)->delete();
+                CraftsmanJobCancel::where('active_job_id', $active_job_id)->delete();
+                
+                // Delete any job images
+                $job_images = CraftsmanJobImage::where('job_id', $active_job_id)->get();
+                foreach ($job_images as $image) {
+                    if ($image->image) {
+                        $exist = Storage::disk('public')->exists('images/'. $image->image);
+                        if ($exist) {
+                            Storage::disk('public')->delete('images/'. $image->image);
+                        }
+                    }
+                }
+                CraftsmanJobImage::where('job_id', $active_job_id)->delete();
+
+                // Now delete the active job
+                $active_job->delete();
+
+                // Send notifications to both parties
+                $title = 'تم إلغاء العمل';
+                $body = 'تم إلغاء العمل بناءً على طلب الطرفين';
+                
+                // Notify client
+                $sender = app(NotificationSender::class);
+                $sender->send($client_id, $title, $body, 'client');
+                
+                // Notify craftsman
+                $sender->send($active_job->craftsman_id, $title, $body, 'craftsman');
+
+                \DB::commit();
+
+                return response()->json([
+                    'message' => 'Job has been canceled as both parties requested cancellation',
+                    'status' => true
+                ], 200);
+            }
+
+            // If only client requested cancellation, just notify the craftsman
+            $title = 'طلب إلغاء العمل';
+            $body = 'العميل طلب إلغاء العمل. يمكنك الموافقة أو الرفض من خلال قائمة طلبات الإلغاء';
+            $sender = app(NotificationSender::class);
+            $result = $sender->send($active_job->craftsman_id, $title, $body, 'craftsman');
+
+            \DB::commit();
+
+            return response()->json([
+                'message' => 'request is sent successfully',
+                'status' => true
+            ], 200);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error in client_cancel_job: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('Request data: ' . json_encode($request->all()));
+            return response()->json([
+                'message' => 'An error occurred while processing your request: ' . $e->getMessage(),
+                'status' => false
+            ], 500);
         }
     }
 
@@ -842,45 +953,118 @@ class CraftsmanJobsController extends Controller
 
     public function craftsman_cancel_job(Request $request)
     {
-        $craftsman_id = $request->craftsman_id;
-        if (!$craftsman_id) {
-            return response()->json(['message' => 'you should give me the id of the craftsman in parameter(craftsman_id)','status' => false],404);
-        }
-        $active_job_id = $request->active_job_id;
-        if (!$active_job_id) {
-            return response()->json(['message' => 'you should give me the id of the active job in parameter(active_job_id)','status' => false],404);
-        }
+        try {
+            $craftsman_id = $request->craftsman_id;
+            if (!$craftsman_id) {
+                return response()->json(['message' => 'you should give me the id of the craftsman in parameter(craftsman_id)','status' => false],404);
+            }
+            $active_job_id = $request->active_job_id;
+            if (!$active_job_id) {
+                return response()->json(['message' => 'you should give me the id of the active job in parameter(active_job_id)','status' => false],404);
+            }
 
-        $craftsman = Craftsman::find($craftsman_id);
-        if (!$craftsman) {
-            return response()->json(['message'=>'craftsman not found','status'=>false,],404);
-        }
+            $craftsman = Craftsman::find($craftsman_id);
+            if (!$craftsman) {
+                return response()->json(['message'=>'craftsman not found','status'=>false,],404);
+            }
 
-        $active_job = CraftsmanJob::select()->where('id',$active_job_id)->where('craftsman_id',$craftsman_id)->first();
-        if (!$active_job) {
-            return response()->json(['message'=>'active job not found or this craftsman does not have this active job','status'=>false,],404);
-        }
-        $notificationVar = $active_job->craftsman_id;
-        $CancelActiveJob = ClientJobCancel::select()->where('active_job_id',$active_job_id)->first();
-        if ($CancelActiveJob) {
-            return response()->json(['message'=>'client already requested cancellation for this active_job','status'=>false,],400);
-        }
-        $CancelActiveJob = CraftsmanJobCancel::select()->where('active_job_id',$active_job_id)->where('craftsman_id',$craftsman_id)->first();
-        if ($CancelActiveJob) {
-            return response()->json(['message'=>'this craftsman already requested cancellation for this active_job','status'=>false,],400);
-        }
-        $status = 'pending';
-        $CancelActiveJob = new CraftsmanJobCancel();
-        $CancelActiveJob->status = $status;
-        $CancelActiveJob->craftsman_id = $craftsman_id;
-        $CancelActiveJob->active_job_id = $active_job_id;
-        $CancelActiveJob->save();
-        if ($CancelActiveJob) {
-            return response()->json(['message' => 'request is sent successfully', 'status' => true],200);
-        }
-        else
-        {
-            return response()->json(['message' => 'can not send this request', 'status' => false],400);
+            $active_job = CraftsmanJob::select()->where('id',$active_job_id)->where('craftsman_id',$craftsman_id)->first();
+            if (!$active_job) {
+                return response()->json(['message'=>'active job not found or this craftsman does not have this active job','status'=>false,],404);
+            }
+
+            // Check if job is already finished
+            $finishedJob = CraftsmanJobFinished::where('active_job_id', $active_job_id)->first();
+            if ($finishedJob) {
+                return response()->json(['message'=>'cannot cancel a finished job','status'=>false,],400);
+            }
+
+            // Check for existing cancellation requests
+            $existingClientCancel = ClientJobCancel::where('active_job_id',$active_job_id)->first();
+            $existingCraftsmanCancel = CraftsmanJobCancel::where('active_job_id',$active_job_id)
+                ->where('craftsman_id',$craftsman_id)
+                ->first();
+
+            if ($existingCraftsmanCancel) {
+                return response()->json(['message'=>'this craftsman already requested cancellation for this active_job','status'=>false,],400);
+            }
+
+            \DB::beginTransaction();
+
+            $cancellationRequest = new CraftsmanJobCancel();
+            $cancellationRequest->status = 'pending';
+            $cancellationRequest->craftsman_id = $craftsman_id;
+            $cancellationRequest->active_job_id = $active_job_id;
+            $cancellationRequest->save();
+
+            // If client has already requested cancellation, automatically cancel the job
+            if ($existingClientCancel) {
+                // Update both cancellation requests to approved
+                $existingClientCancel->status = 'approved';
+                $existingClientCancel->save();
+                $cancellationRequest->status = 'approved';
+                $cancellationRequest->save();
+
+                // Delete any related records first
+                ClientJobCancel::where('active_job_id', $active_job_id)->delete();
+                CraftsmanJobCancel::where('active_job_id', $active_job_id)->delete();
+                
+                // Delete any job images
+                $job_images = CraftsmanJobImage::where('job_id', $active_job_id)->get();
+                foreach ($job_images as $image) {
+                    if ($image->image) {
+                        $exist = Storage::disk('public')->exists('images/'. $image->image);
+                        if ($exist) {
+                            Storage::disk('public')->delete('images/'. $image->image);
+                        }
+                    }
+                }
+                CraftsmanJobImage::where('job_id', $active_job_id)->delete();
+
+                // Now delete the active job
+                $active_job->delete();
+
+                // Send notifications to both parties
+                $title = 'تم إلغاء العمل';
+                $body = 'تم إلغاء العمل بناءً على طلب الطرفين';
+                
+                // Notify client
+                $sender = app(NotificationSender::class);
+                $sender->send($active_job->client_id, $title, $body, 'client');
+                
+                // Notify craftsman
+                $sender->send($craftsman_id, $title, $body, 'craftsman');
+
+                \DB::commit();
+
+                return response()->json([
+                    'message' => 'Job has been canceled as both parties requested cancellation',
+                    'status' => true
+                ], 200);
+            }
+
+            // If only craftsman requested cancellation, just notify the client
+            $title = 'طلب إلغاء العمل';
+            $body = 'الصنايعي طلب إلغاء العمل. يمكنك الموافقة أو الرفض من خلال قائمة طلبات الإلغاء';
+            $sender = app(NotificationSender::class);
+            $result = $sender->send($active_job->client_id, $title, $body, 'client');
+
+            \DB::commit();
+
+            return response()->json([
+                'message' => 'request is sent successfully',
+                'status' => true
+            ], 200);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error in craftsman_cancel_job: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('Request data: ' . json_encode($request->all()));
+            return response()->json([
+                'message' => 'An error occurred while processing your request: ' . $e->getMessage(),
+                'status' => false
+            ], 500);
         }
     }
 
