@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,7 +18,6 @@ use Illuminate\Support\Facades\Artisan;
 Route::get('/', function () {
     return view('welcome');
 });
-
 
 Route::get('/pusher', function () {
     return view('pusher');
@@ -35,3 +35,7 @@ Route::get('/clear-cache', function () {
 
     return "Configuration and cache and route cleared successfully!";
 });
+
+// Paymob Payment Status Routes
+Route::get('/payment-success', [PaymentController::class, 'success'])->name('payment.success');
+Route::get('/payment-failed', [PaymentController::class, 'failed'])->name('payment.failed');

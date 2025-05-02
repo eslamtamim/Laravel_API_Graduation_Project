@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Events\Notify;
 use App\Events\ClientNotify;
+use App\Interfaces\PaymentGatewayInterface;
 use App\Models\ClientNotification;
 use App\Models\CraftsmanNotification;
 use Illuminate\Support\ServiceProvider;
 use App\Services\FCMService;
 use App\Services\NotificationSender;
+use App\Services\PaymobPaymentService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +28,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->when(NotificationSender::class)
             ->needs(FCMService::class)
             ->give(FCMService::class);
+            
+        // Bind PaymentGatewayInterface to PaymobPaymentService
+        $this->app->bind(PaymentGatewayInterface::class, PaymobPaymentService::class);
     }
 
     /**

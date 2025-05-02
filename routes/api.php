@@ -13,6 +13,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JobOfferController;
 use App\Http\Controllers\NotificationsController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SearchImagesController;
 use Illuminate\Http\Request;
@@ -159,4 +160,8 @@ Route::get('/img/{path}/{name}', function(String $path, String $name){
     //     return response()->file("$path/$name");
     // }
 });
+
+// Paymob Payment Routes
+Route::post('/payment/process', [PaymentController::class, 'paymentProcess']);
+Route::match(['GET','POST'],'/payment/callback', [PaymentController::class, 'callBack']);
 
