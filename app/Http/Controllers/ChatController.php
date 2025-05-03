@@ -49,18 +49,20 @@ class ChatController extends Controller
             $validator = Validator::make($request->all(), [
                 'image' => 'image|mimes:png,jpg,jpeg|max:50120',
                 'chat_id' => 'required|exists:chats,id',
-                'sender' => 'required|in:craftsman,client',
+                'sender' => 'required|in:craftsman,client,handyman',
             ]);
             if ($validator->fails()) {
                 return response()->json(['message' => $validator->errors(), 'status' => false], 400);
             }
-
+            if($request->sender == 'handyman'){
+                $request->sender = 'craftsman';
+            }
             $imageName = 'chat_images/' . Str::random() . '.' . $request->image->getClientOriginalExtension();
             Storage::disk('public')->putFileAs('images/', $request->image, $imageName);
 
             $message = ChatMessage::create([
                 'chat_id' => $request->chat_id,
-                'se4nder' => $request->sender,
+                'sender' => $request->sender,
                 'msg' => $imageName,
                 'type' => 'image',
             ]);
@@ -72,8 +74,8 @@ class ChatController extends Controller
                     'type' => 'image',
                     'timestamp' => now()->toDateTimeString(),
                 ]);
-            if (request()->sender == 'craftsman') {
-                $user_id = Chat::where('id', $request->chat_id)->client_id;
+            if (request()->sender == 'craftsman' || request()->sender == 'handyman') {
+                $user_id = Chat::where('id', $request->chat_id)->first()->client_id;
                 $user_type = 'client';
             } else {
                 $user_id = Chat::where('id', $request->chat_id)->first()->craftsman_id;
@@ -85,23 +87,25 @@ class ChatController extends Controller
             $result = $sender->send($user_id, $title, $body, $user_type);
 
             if ($result['status'] === 'success') {
-                return response()->json(['message' => 'Image sent successfully with notification', 'status' => true], 200);
+                return response()->json(['message' => 'Image sent successfully with notification', 'status' => true, 'image_path' => $message->msg], 200);
             } elseif ($result['status'] === 'partial') {
-                return response()->json(['message' => 'Image sent successfully but without some notifications', 'status' => true], 200);
+                return response()->json(['message' => 'Image sent successfully but without some notifications', 'status' => true, 'image_path' => $message->msg], 200);
             } else {
-                return response()->json(['message' => 'Image sent successfully but without notification', 'status' => true], 200);
+                return response()->json(['message' => 'Image sent successfully but without notification', 'status' => true, 'image_path' => $message->msg], 200);
             }
 
         } else {
             $validator = Validator::make($request->all(), [
                 'msg' => 'required',
                 'chat_id' => 'required|exists:chats,id',
-                'sender' => 'required|in:craftsman,client',
+                'sender' => 'required|in:craftsman,client,handyman',
             ]);
             if ($validator->fails()) {
                 return response()->json(['message' => $validator->errors(), 'status' => false], 400);
             }
-
+            if($request->sender == 'handyman'){
+                $request->sender = 'craftsman';
+            }
             $message = ChatMessage::create([
                 'chat_id' => $request->chat_id,
                 'sender' => $request->sender,
@@ -117,8 +121,8 @@ class ChatController extends Controller
                     'timestamp' => now()->toDateTimeString(),
                 ]);
 
-            if (request()->sender == 'craftsman') {
-                $user_id = Chat::where('id', $request->chat_id)->client_id;
+            if ($request->sender == 'craftsman' || $request->sender == 'handyman') {
+                $user_id = Chat::where('id', $request->chat_id)->first()->client_id;
                 $user_type = 'client';
             } else {
                 $user_id = Chat::where('id', $request->chat_id)->first()->craftsman_id;
