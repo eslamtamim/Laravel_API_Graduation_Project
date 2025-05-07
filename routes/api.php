@@ -89,6 +89,8 @@ Route::group([
     Route::post('/active_job_cancellation', [CraftsmanJobsController::class, 'craftsman_cancel_job']);
     Route::post('/get_active_job_cancellation_for_craftsman', [CraftsmanJobsController::class, 'get_cancellation_requests_for_craftsman']);
     Route::post('/craftsman_response_job_cancellation', [CraftsmanJobsController::class, 'craftsman_response_job_cancellation']);
+    Route::post('/check_cancellation_request', [CraftsmanJobsController::class, 'check_cancellation_request']);
+    Route::post('/reject_cancellation_request', [CraftsmanJobsController::class, 'reject_cancellation_request']);
     Route::post('/create_chat', [ChatController::class, 'create_chat']);
     Route::post('/send_message', [ChatController::class, 'sendMessage']);
     Route::get('/get_chat_by_id', [ChatController::class, 'getChatById']);
@@ -137,6 +139,8 @@ Route::group([
     Route::post('/active_job_cancellation', [CraftsmanJobsController::class, 'client_cancel_job']);
     Route::post('/get_active_job_cancellation_for_client', [CraftsmanJobsController::class, 'get_cancellation_requests_for_client']);
     Route::post('/client_response_job_cancellation', [CraftsmanJobsController::class, 'client_response_job_cancellation']);
+    Route::post('/check_cancellation_request', [CraftsmanJobsController::class, 'check_cancellation_request']);
+    Route::post('/reject_cancellation_request', [CraftsmanJobsController::class, 'reject_cancellation_request']);
 });
 
 Route::post('/get_crafts', [CraftsController::class, 'index']);

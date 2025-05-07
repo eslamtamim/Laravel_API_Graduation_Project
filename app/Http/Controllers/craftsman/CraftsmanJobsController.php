@@ -1113,5 +1113,162 @@ class CraftsmanJobsController extends Controller
         ], 200);
     }
 
+    public function check_cancellation_request(Request $request)
+    {
+        $job_id = $request->job_id;
+        if (!$job_id) {
+            return response()->json([
+                'message' => 'You should provide the ID of the job in the parameter (job_id)',
+                'status' => false
+            ], 404);
+        }
+
+        // Check if the job exists
+        $job = CraftsmanJob::find($job_id);
+        if (!$job) {
+            return response()->json([
+                'message' => 'Job not found',
+                'status' => false
+            ], 404);
+        }
+
+        // Check for client cancellation request
+        $clientCancel = ClientJobCancel::where('active_job_id', $job_id)
+            ->where('status', 'pending')
+            ->first();
+
+        // Check for craftsman cancellation request
+        $craftsmanCancel = CraftsmanJobCancel::where('active_job_id', $job_id)
+            ->where('status', 'pending')
+            ->first();
+
+        $response = [
+            'has_cancellation_request' => false,
+            'requested_by' => null,
+            'status' => true
+        ];
+
+        if ($clientCancel) {
+            $response['has_cancellation_request'] = true;
+            $response['requested_by'] = 'client';
+        } elseif ($craftsmanCancel) {
+            $response['has_cancellation_request'] = true;
+            $response['requested_by'] = 'craftsman';
+        }
+
+        return response()->json($response, 200);
+    }
+
+    public function reject_cancellation_request(Request $request)
+    {
+        try {
+            $job_id = $request->job_id;
+            if (!$job_id) {
+                return response()->json([
+                    'message' => 'You should provide the ID of the job in the parameter (job_id)',
+                    'status' => false
+                ], 404);
+            }
+
+            $user_id = $request->user_id;
+            if (!$user_id) {
+                return response()->json([
+                    'message' => 'You should provide the ID of the user in the parameter (user_id)',
+                    'status' => false
+                ], 404);
+            }
+
+            $user_type = $request->user_type;
+            if (!$user_type || !in_array($user_type, ['client', 'craftsman'])) {
+                return response()->json([
+                    'message' => 'You should provide a valid user type (client or craftsman) in the parameter (user_type)',
+                    'status' => false
+                ], 404);
+            }
+
+            // Check if the job exists
+            $job = CraftsmanJob::find($job_id);
+            if (!$job) {
+                return response()->json([
+                    'message' => 'Job not found',
+                    'status' => false
+                ], 404);
+            }
+
+            // Verify user has permission to reject (must be the other party)
+            if ($user_type === 'client' && $job->client_id != $user_id) {
+                return response()->json([
+                    'message' => 'You do not have permission to reject this cancellation request',
+                    'status' => false
+                ], 403);
+            }
+            if ($user_type === 'craftsman' && $job->craftsman_id != $user_id) {
+                return response()->json([
+                    'message' => 'You do not have permission to reject this cancellation request',
+                    'status' => false
+                ], 403);
+            }
+
+            \DB::beginTransaction();
+
+            // Find and update the cancellation request
+            if ($user_type === 'client') {
+                $cancellationRequest = CraftsmanJobCancel::where('active_job_id', $job_id)
+                    ->where('status', 'pending')
+                    ->first();
+                
+                if (!$cancellationRequest) {
+                    return response()->json([
+                        'message' => 'No pending cancellation request found for this job',
+                        'status' => false
+                    ], 404);
+                }
+
+                $cancellationRequest->update(['status' => 'rejected']);
+
+                // Notify the craftsman
+                $title = 'تم رفض طلب الإلغاء';
+                $body = 'العميل رفض طلب إلغاء العمل';
+                $sender = app(NotificationSender::class);
+                $sender->send($job->craftsman_id, $title, $body, 'craftsman');
+            } else {
+                $cancellationRequest = ClientJobCancel::where('active_job_id', $job_id)
+                    ->where('status', 'pending')
+                    ->first();
+                
+                if (!$cancellationRequest) {
+                    return response()->json([
+                        'message' => 'No pending cancellation request found for this job',
+                        'status' => false
+                    ], 404);
+                }
+
+                $cancellationRequest->update(['status' => 'rejected']);
+
+                // Notify the client
+                $title = 'تم رفض طلب الإلغاء';
+                $body = 'الصنايعي رفض طلب إلغاء العمل';
+                $sender = app(NotificationSender::class);
+                $sender->send($job->client_id, $title, $body, 'client');
+            }
+
+            \DB::commit();
+
+            return response()->json([
+                'message' => 'Cancellation request has been rejected successfully',
+                'status' => true
+            ], 200);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Error in reject_cancellation_request: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('Request data: ' . json_encode($request->all()));
+            return response()->json([
+                'message' => 'An error occurred while processing your request: ' . $e->getMessage(),
+                'status' => false
+            ], 500);
+        }
+    }
 
 }
