@@ -154,6 +154,7 @@ Route::group([
     Route::post('/check_cancellation_request', [CraftsmanJobsController::class, 'check_cancellation_request']);
     Route::post('/reject_cancellation_request', [CraftsmanJobsController::class, 'reject_cancellation_request']);
     Route::post('/get_cancellation_requests_by_user', [CraftsmanJobsController::class, 'get_cancellation_requests_by_user']);
+    Route::get('/orders', [PaymentController::class, 'getClientOrders']);
 });
 
 
@@ -182,4 +183,5 @@ Route::get('/img/{path}/{name}', function(String $path, String $name){
 // Paymob Payment Routes
 Route::post('/payment/process', [PaymentController::class, 'paymentProcess'])->middleware('jwt.auth');
 Route::match(['GET','POST'],'/payment/callback', [PaymentController::class, 'callBack']);
+Route::get('/payment/transaction/{order_id}', [PaymentController::class, 'getTransactionByOrderId'])->middleware('jwt.auth');
 
