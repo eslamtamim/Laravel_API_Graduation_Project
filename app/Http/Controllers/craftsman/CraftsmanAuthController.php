@@ -891,4 +891,53 @@ class CraftsmanAuthController extends Controller
         return response()->json(['message' => 'تم إزالة الحساب بنجاح','status' => true],200);
     }
 
+    /**
+     * GET: Verify endpoint - returns user verification data
+     * POST: Set verification status (true/false)
+     */
+    public function verify(Request $request)
+    {
+        $craftsman_id = $request->query('craftsman_id');
+        if (!$craftsman_id) {
+            return response()->json(['message' => 'craftsman_id is required','status' => false], 400);
+        }
+        $craftsman = Craftsman::find($craftsman_id);
+        if (!$craftsman) {
+            return response()->json(['message' => 'User not found','status' => false], 404);
+        }
+        $cities = City::select('city')->where('craftsman_id', $craftsman->id)->get();
+        $phones = Phone::select('phone')->where('craftsman_id', $craftsman->id)->where('type','contact')->get();
+        $whatsapp = Phone::select('phone')->where('craftsman_id', $craftsman->id)->where('type','whatsapp')->get();
+        return response()->json([
+            'address' => $craftsman->address,
+            'description' => $craftsman->description,
+            'image' => $craftsman->image,
+            'craft_id' => $craftsman->craft_id,
+            'city' => $cities,
+            'phone' => $phones,
+            'whatsapp' => $whatsapp,
+            'personal_id' => $craftsman->personal_id,
+            'personal_id_back' => $craftsman->personal_id_back,
+            'criminal_record' => $craftsman->criminal_record,
+            'verified' => $craftsman->verified ?? null,
+            'status' => true,
+        ]);
+    }
+
+    public function setVerify(Request $request)
+    {
+        $craftsman_id = $request->input('craftsman_id');
+        $verified = $request->input('verified');
+        if (!$craftsman_id || !isset($verified)) {
+            return response()->json(['message' => 'craftsman_id and verified are required','status' => false], 400);
+        }
+        $craftsman = Craftsman::find($craftsman_id);
+        if (!$craftsman) {
+            return response()->json(['message' => 'User not found','status' => false], 404);
+        }
+        $craftsman->verified = filter_var($verified, FILTER_VALIDATE_BOOLEAN);
+        $craftsman->save();
+        return response()->json(['message' => 'Verification status updated','status' => true, 'verified' => $craftsman->verified]);
+    }
+
 }

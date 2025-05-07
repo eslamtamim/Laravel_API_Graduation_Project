@@ -800,6 +800,18 @@ class CraftsmanJobsController extends Controller
                 return response()->json(['message' => 'you should give me the id of the active job in parameter(active_job_id)','status' => false],404);
             }
 
+            $validator = Validator::make($request->all(), [
+                'reason' => 'required|string|max:500',
+            ],[
+                'reason.required' => 'يجب أن تُرسل سبب الإلغاء',
+                'reason.string' => 'سبب الإلغاء يجب أن يكون نصاً',
+                'reason.max' => 'سبب الإلغاء يجب أن لا يتجاوز 500 حرف',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['message'=>$validator->errors(),'status'=>false],401);
+            }
+
             $client = Client::find($client_id);
             if (!$client) {
                 return response()->json(['message'=>'client not found','status'=>false,],404);
@@ -832,6 +844,7 @@ class CraftsmanJobsController extends Controller
             $cancellationRequest->status = 'pending';
             $cancellationRequest->client_id = $client_id;
             $cancellationRequest->active_job_id = $active_job_id;
+            $cancellationRequest->reason = $request->reason;
             $cancellationRequest->save();
 
             // If craftsman has already requested cancellation, automatically cancel the job
@@ -863,7 +876,7 @@ class CraftsmanJobsController extends Controller
 
                 // Send notifications to both parties
                 $title = 'تم إلغاء العمل';
-                $body = 'تم إلغاء العمل بناءً على طلب الطرفين';
+                $body = 'تم إلغاء العمل بناءً على طلب الطرفين. سبب الإلغاء: ' . $request->reason;
                 
                 // Notify client
                 $sender = app(NotificationSender::class);
@@ -882,7 +895,7 @@ class CraftsmanJobsController extends Controller
 
             // If only client requested cancellation, just notify the craftsman
             $title = 'طلب إلغاء العمل';
-            $body = 'العميل طلب إلغاء العمل. يمكنك الموافقة أو الرفض من خلال قائمة طلبات الإلغاء';
+            $body = 'العميل طلب إلغاء العمل. يمكنك الموافقة أو الرفض من خلال قائمة طلبات الإلغاء. سبب الإلغاء: ' . $request->reason;
             $sender = app(NotificationSender::class);
             $result = $sender->send($active_job->craftsman_id, $title, $body, 'craftsman');
 
@@ -963,6 +976,18 @@ class CraftsmanJobsController extends Controller
                 return response()->json(['message' => 'you should give me the id of the active job in parameter(active_job_id)','status' => false],404);
             }
 
+            $validator = Validator::make($request->all(), [
+                'reason' => 'required|string|max:500',
+            ],[
+                'reason.required' => 'يجب أن تُرسل سبب الإلغاء',
+                'reason.string' => 'سبب الإلغاء يجب أن يكون نصاً',
+                'reason.max' => 'سبب الإلغاء يجب أن لا يتجاوز 500 حرف',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['message'=>$validator->errors(),'status'=>false],401);
+            }
+
             $craftsman = Craftsman::find($craftsman_id);
             if (!$craftsman) {
                 return response()->json(['message'=>'craftsman not found','status'=>false,],404);
@@ -995,6 +1020,7 @@ class CraftsmanJobsController extends Controller
             $cancellationRequest->status = 'pending';
             $cancellationRequest->craftsman_id = $craftsman_id;
             $cancellationRequest->active_job_id = $active_job_id;
+            $cancellationRequest->reason = $request->reason;
             $cancellationRequest->save();
 
             // If client has already requested cancellation, automatically cancel the job
@@ -1026,7 +1052,7 @@ class CraftsmanJobsController extends Controller
 
                 // Send notifications to both parties
                 $title = 'تم إلغاء العمل';
-                $body = 'تم إلغاء العمل بناءً على طلب الطرفين';
+                $body = 'تم إلغاء العمل بناءً على طلب الطرفين. سبب الإلغاء: ' . $request->reason;
                 
                 // Notify client
                 $sender = app(NotificationSender::class);
@@ -1045,7 +1071,7 @@ class CraftsmanJobsController extends Controller
 
             // If only craftsman requested cancellation, just notify the client
             $title = 'طلب إلغاء العمل';
-            $body = 'الصنايعي طلب إلغاء العمل. يمكنك الموافقة أو الرفض من خلال قائمة طلبات الإلغاء';
+            $body = 'الصنايعي طلب إلغاء العمل. يمكنك الموافقة أو الرفض من خلال قائمة طلبات الإلغاء. سبب الإلغاء: ' . $request->reason;
             $sender = app(NotificationSender::class);
             $result = $sender->send($active_job->client_id, $title, $body, 'client');
 
@@ -1262,6 +1288,179 @@ class CraftsmanJobsController extends Controller
         } catch (\Exception $e) {
             \DB::rollBack();
             \Log::error('Error in reject_cancellation_request: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('Request data: ' . json_encode($request->all()));
+            return response()->json([
+                'message' => 'An error occurred while processing your request: ' . $e->getMessage(),
+                'status' => false
+            ], 500);
+        }
+    }
+
+    public function get_cancellation_requests_by_user(Request $request)
+    {
+        try {
+            // Extract user_id from the request
+            $user_id = $request->user_id;
+            if (!$user_id) {
+                return response()->json([
+                    'message' => 'You should provide the ID of the user in the parameter (user_id)',
+                    'status' => false
+                ], 404);
+            }
+
+            // Extract user_type from the request
+            $user_type = $request->user_type;
+            if (!$user_type || !in_array($user_type, ['client', 'craftsman'])) {
+                return response()->json([
+                    'message' => 'You should provide a valid user type (client or craftsman) in the parameter (user_type)',
+                    'status' => false
+                ], 404);
+            }
+
+            // Extract status from the request (optional)
+            $status = $request->status;
+            if ($status && !in_array($status, ['pending', 'approved', 'rejected'])) {
+                return response()->json([
+                    'message' => 'Status must be one of: pending, approved, rejected',
+                    'status' => false
+                ], 400);
+            }
+
+            // Extract pagination value from the request
+            $pagination = $request->pagination;
+            if (!$pagination) {
+                return response()->json([
+                    'message' => 'You should provide the pagination value in the parameter (pagination)',
+                    'status' => false
+                ], 404);
+            }
+
+            // Verify user exists
+            if ($user_type === 'client') {
+                $user = Client::find($user_id);
+            } else {
+                $user = Craftsman::find($user_id);
+            }
+
+            if (!$user) {
+                return response()->json([
+                    'message' => ucfirst($user_type) . ' not found',
+                    'status' => false
+                ], 404);
+            }
+
+            // Build the query based on user type
+            if ($user_type === 'client') {
+                $query = ClientJobCancel::where('client_id', $user_id)
+                    ->whereHas('active_job', function ($query) use ($user_id) {
+                        $query->where('client_id', $user_id);
+                    });
+            } else {
+                $query = CraftsmanJobCancel::where('craftsman_id', $user_id)
+                    ->whereHas('active_job', function ($query) use ($user_id) {
+                        $query->where('craftsman_id', $user_id);
+                    });
+            }
+
+            // Add status filter if provided
+            if ($status) {
+                $query->where('status', $status);
+            }
+
+            // Eager load relationships and paginate
+            $cancellation_requests = $query
+                ->with([
+                    'active_job',
+                    'active_job.job_images',
+                    $user_type === 'client' ? 'active_job.craftsman' : 'active_job.client'
+                ])
+                ->orderBy('created_at', 'desc')
+                ->paginate($pagination);
+
+            return response()->json([
+                'data' => $cancellation_requests,
+                'status' => true
+            ], 200);
+
+        } catch (\Exception $e) {
+            \Log::error('Error in get_cancellation_requests_by_user: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('Request data: ' . json_encode($request->all()));
+            return response()->json([
+                'message' => 'An error occurred while processing your request: ' . $e->getMessage(),
+                'status' => false
+            ], 500);
+        }
+    }
+
+    public function get_rejected_cancellation_requests(Request $request)
+    {
+        try {
+            // Extract pagination value from the request
+            $pagination = $request->pagination;
+            if (!$pagination) {
+                return response()->json([
+                    'message' => 'You should provide the pagination value in the parameter (pagination)',
+                    'status' => false
+                ], 404);
+            }
+
+            // Get rejected client cancellation requests
+            $client_rejected_requests = ClientJobCancel::where('status', 'rejected')
+                ->with([
+                    'active_job',
+                    'active_job.job_images',
+                    'active_job.craftsman',
+                    'active_job.client'
+                ])
+                ->get()
+                ->map(function ($request) {
+                    $request->request_type = 'client';
+                    return $request;
+                });
+
+            // Get rejected craftsman cancellation requests
+            $craftsman_rejected_requests = CraftsmanJobCancel::where('status', 'rejected')
+                ->with([
+                    'active_job',
+                    'active_job.job_images',
+                    'active_job.craftsman',
+                    'active_job.client'
+                ])
+                ->get()
+                ->map(function ($request) {
+                    $request->request_type = 'craftsman';
+                    return $request;
+                });
+
+            // Combine both collections
+            $all_rejected_requests = $client_rejected_requests->concat($craftsman_rejected_requests)
+                ->sortByDesc('created_at');
+
+            // Manually paginate the combined collection
+            $page = $request->get('page', 1);
+            $perPage = $pagination;
+            $offset = ($page - 1) * $perPage;
+
+            $paginated_results = $all_rejected_requests->slice($offset, $perPage);
+            $total = $all_rejected_requests->count();
+
+            $paginated_data = new \Illuminate\Pagination\LengthAwarePaginator(
+                $paginated_results,
+                $total,
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+
+            return response()->json([
+                'data' => $paginated_data,
+                'status' => true
+            ], 200);
+
+        } catch (\Exception $e) {
+            \Log::error('Error in get_rejected_cancellation_requests: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
             \Log::error('Request data: ' . json_encode($request->all()));
             return response()->json([

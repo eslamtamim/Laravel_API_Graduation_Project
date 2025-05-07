@@ -38,6 +38,15 @@ use Illuminate\Support\Facades\Storage;
 
 
 Route::group([
+    'middleware' => ['assign.guard:admin','jwt.auth'],
+    'prefix' => 'admin'
+], function ($router) {
+    Route::post('/get_rejected_cancellation_requests', [CraftsmanJobsController::class, 'get_rejected_cancellation_requests']);
+});
+
+
+
+Route::group([
     'middleware' => ['assign.guard:craftsman','jwt.auth'],
     'prefix' => 'craftsman'
 ], function ($router) {
@@ -91,12 +100,15 @@ Route::group([
     Route::post('/craftsman_response_job_cancellation', [CraftsmanJobsController::class, 'craftsman_response_job_cancellation']);
     Route::post('/check_cancellation_request', [CraftsmanJobsController::class, 'check_cancellation_request']);
     Route::post('/reject_cancellation_request', [CraftsmanJobsController::class, 'reject_cancellation_request']);
+    Route::post('/get_cancellation_requests_by_user', [CraftsmanJobsController::class, 'get_cancellation_requests_by_user']);
     Route::post('/create_chat', [ChatController::class, 'create_chat']);
     Route::post('/send_message', [ChatController::class, 'sendMessage']);
     Route::get('/get_chat_by_id', [ChatController::class, 'getChatById']);
     Route::get('/get_chat_by_user', [ChatController::class, 'getChatByUser']);
     Route::get('/get_client_chats', [ChatController::class, 'getClientChats']);
     Route::get('/get_craftsman_chats', [ChatController::class, 'getCraftsmanChats']);
+    Route::get('/verify', [CraftsmanAuthController::class, 'verify'])->withoutMiddleware(['assign.guard:craftsman','jwt.auth']);
+    Route::post('/verify', [CraftsmanAuthController::class, 'setVerify'])->withoutMiddleware(['assign.guard:craftsman','jwt.auth']);
 });
 
 
@@ -141,7 +153,9 @@ Route::group([
     Route::post('/client_response_job_cancellation', [CraftsmanJobsController::class, 'client_response_job_cancellation']);
     Route::post('/check_cancellation_request', [CraftsmanJobsController::class, 'check_cancellation_request']);
     Route::post('/reject_cancellation_request', [CraftsmanJobsController::class, 'reject_cancellation_request']);
+    Route::post('/get_cancellation_requests_by_user', [CraftsmanJobsController::class, 'get_cancellation_requests_by_user']);
 });
+
 
 Route::post('/get_crafts', [CraftsController::class, 'index']);
 Route::post('/get_craft', [CraftsController::class, 'get_one_craft']);
@@ -166,6 +180,6 @@ Route::get('/img/{path}/{name}', function(String $path, String $name){
 });
 
 // Paymob Payment Routes
-Route::post('/payment/process', [PaymentController::class, 'paymentProcess']);
+Route::post('/payment/process', [PaymentController::class, 'paymentProcess'])->middleware('jwt.auth');
 Route::match(['GET','POST'],'/payment/callback', [PaymentController::class, 'callBack']);
 
